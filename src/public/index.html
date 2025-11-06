@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>ISS Dashboard</title>
+  <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/globe.gl@2.0.0/dist/globe.gl.min.js"></script>
+  <style>
+    #globe {
+      width: 70vw;
+      height: 100vh;
+      float: left;
+    }
+
+    #box {
+      width: 30vw;
+      height: 100vh;
+      float: left;
+      padding: 10px;
+      background: #f0f0f0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="globe"></div>
+  <div id="box">
+    <h2>ISS Telemetry</h2>
+    <p>Loading...</p>
+  </div>
+  <script>
+    const globe = Globe()(document.getElementById('globe'))
+      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg')
+      .backgroundColor('#000');
+
+    async function update() {
+      const data = await (await fetch('/latest')).json();
+      globe.customLayerData([{
+        lat: data.latitude, lng: data.longitude,
+        customThreeObject: () => new THREE.Mesh(new THREE.SphereGeometry(0.02), new THREE.MeshBasicMaterial({ color: 0xff0000 }))
+      }]);
+      globe.pointOfView({ lat: data.latitude, lng: data.longitude, altitude: 2.5 }, 1000);
+      document.getElementById('box').innerHTML = `<h2>ISS Telemetry</h2>
+    <p>Lat: ${data.latitude || 'N/A'}</p><p>Lon: ${data.longitude || 'N/A'}</p>
+    <p>Alt: ${data.altitude || 'N/A'} km</p><p>Vel: ${data.velocity || 'N/A'} km/h</p>
+    <p>Time: ${data.timestamp || 'N/A'}</p>`;
+    }
+    update(); setInterval(update, 5000);
+  </script>
+</body>
+
+</html>
